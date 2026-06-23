@@ -3,7 +3,8 @@ node_modules/
 
 # Newman reports
 newman/reports/*.html
-newman/reports/*.xml
+newman/reports/allure-results/
+newman/reports/allure-report/
 
 # OS files
 .DS_Store

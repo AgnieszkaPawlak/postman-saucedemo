@@ -11,8 +11,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
   api-tests:
@@ -29,8 +27,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Newman and HTML reporter
-        run: npm install -g newman newman-reporter-html
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Newman and reporters
+        run: npm install -g newman newman-reporter-html newman-reporter-allure allure-commandline
 
       - name: Verify Postman files exist
         run: |
@@ -50,28 +54,33 @@ jobs:
       - name: Run Postman API tests
         id: run-tests
         run: |
-          mkdir -p newman/reports
+          mkdir -p newman/reports/allure-results
           newman run postman/SauceDemo_API_Collection.json \
             --environment postman/SauceDemo_Environment.json \
-            --reporters cli,html,junit \
+            --reporters cli,html,allure \
             --reporter-html-export newman/reports/api-test-report.html \
-            --reporter-junit-export newman/reports/junit-report.xml \
+            --reporter-allure-resultsDir newman/reports/allure-results \
             --color on
         continue-on-error: true
 
-      - name: Publish JUnit test results
+      - name: Generate Allure report
         if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: newman/reports/junit-report.xml
-          check_name: Postman API Tests
+        run: |
+          if [ -d newman/reports/allure-results ] && [ "$(ls -A newman/reports/allure-results)" ]; then
+            allure generate newman/reports/allure-results -o newman/reports/allure-report --clean
+          else
+            echo "No Allure results to generate."
+          fi
 
       - name: Upload Newman reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: newman-api-report
-          path: newman/reports/
+          path: |
+            newman/reports/api-test-report.html
+            newman/reports/allure-results/
+            newman/reports/allure-report/
           if-no-files-found: warn
           retention-days: 30
 
@@ -84,12 +93,14 @@ jobs:
             if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
               echo "All Postman API tests passed."
             else
-              echo "API tests failed. Download the **newman-api-report** artifact for HTML and JUnit reports."
+              echo "API tests failed. Download the **newman-api-report** artifact for Newman HTML and Allure reports."
             fi
+            echo ""
+            echo "Allure report path in artifact: \`allure-report/index.html\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail pipeline when API tests fail
         if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "API tests failed. See the Newman CLI output, JUnit check, or uploaded artifact."
+          echo "API tests failed. See the Newman CLI output or download the Allure report artifact."
           exit 1

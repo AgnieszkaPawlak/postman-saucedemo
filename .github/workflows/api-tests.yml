@@ -1,11 +1,10 @@
 name: API Tests
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   run-api-tests:
@@ -20,20 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
 
-      - name: Cache Newman Installation
-        id: cache-newman
-        uses: actions/cache@v3
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-newman-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-newman-
+          distribution: temurin
+          java-version: "17"
 
-      - name: Install Newman and HTML Reporter
-        run: npm install -g newman newman-reporter-html
+      - name: Install Newman and reporters
+        run: npm install -g newman newman-reporter-html newman-reporter-allure allure-commandline
 
       - name: Make Script Executable
         run: chmod +x newman/run-api-tests.sh
@@ -43,21 +37,25 @@ jobs:
         run: ./newman/run-api-tests.sh
         continue-on-error: true
 
-      - name: Upload HTML Report
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: newman-api-report
-          path: newman/reports/api-test-report.html
+          path: |
+            newman/reports/api-test-report.html
+            newman/reports/allure-results/
+            newman/reports/allure-report/
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Check Test Results
         if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "❌ API tests failed. Check the HTML report artifact for details."
+          echo "API tests failed. Check the Allure report artifact for details."
           exit 1
 
       - name: Success Summary
         if: steps.run-tests.outcome == 'success'
         run: |
-          echo "✅ All API tests passed successfully!"
+          echo "All API tests passed successfully!"
