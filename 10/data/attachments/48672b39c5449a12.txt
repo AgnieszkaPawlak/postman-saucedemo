@@ -1,0 +1,9 @@
+{
+  "merge": false,
+  "products": [
+    {
+      "id": 1,
+      "quantity": 3
+    }
+  ]
+}
