@@ -29,17 +29,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Cache Newman Installation
-        id: cache-newman
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-newman-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-newman-
 
       - name: Install Newman and HTML Reporter
         run: npm install -g newman newman-reporter-html
