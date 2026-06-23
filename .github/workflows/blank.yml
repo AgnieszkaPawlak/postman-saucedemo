@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -22,89 +20,66 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          package-manager-cache: false
+          node-version: "20"
 
       - name: Install Newman and HTML reporter
+        run: npm install -g newman newman-reporter-html
+
+      - name: Verify Postman files exist
         run: |
-          npm install --global newman newman-reporter-html
-
-          echo "Node version:"
-          node --version
-
-          echo "NPM version:"
-          npm --version
-
-          echo "Newman version:"
-          newman --version
-
-      - name: Verify Postman files
-        run: |
-          echo "Current directory:"
-          pwd
-
-          echo "Files in repository:"
-          find . -maxdepth 3 -type f | sort
-
-          test -f postman/SauceDemo_API_Collection.json
-          test -f postman/SauceDemo_Environment.json
+          missing=0
+          for file in \
+            postman/SauceDemo_API_Collection.json \
+            postman/SauceDemo_Environment.json; do
+            if [ ! -f "$file" ]; then
+              echo "::error file=$file::Required file not found. Add and push the postman/ directory to the repository."
+              missing=1
+            else
+              echo "Found $file"
+            fi
+          done
+          exit $missing
 
       - name: Run Postman API tests
-        id: newman
-        shell: bash
+        id: run-tests
         run: |
           mkdir -p newman/reports
-
-          set +e
-          set -o pipefail
-
           newman run postman/SauceDemo_API_Collection.json \
             --environment postman/SauceDemo_Environment.json \
             --reporters cli,html \
             --reporter-html-export newman/reports/api-test-report.html \
-            2>&1 | tee newman/reports/newman-output.log
-
-          NEWMAN_EXIT_CODE=${PIPESTATUS[0]}
-
-          echo "Newman exit code: $NEWMAN_EXIT_CODE"
-          echo "exit_code=$NEWMAN_EXIT_CODE" >> "$GITHUB_OUTPUT"
-
-          echo "Generated report files:"
-          find newman/reports -maxdepth 2 -type f -print
-
-          exit 0
+            --color on
+        continue-on-error: true
 
       - name: Upload Newman reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: newman-api-report
           path: newman/reports/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Add test summary
         if: always()
-        shell: bash
         run: |
-          echo "## Postman API test results" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Newman exit code: ${{ steps.newman.outputs.exit_code }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Download the **newman-api-report** artifact to view the HTML report and execution log." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Postman API test results"
+            echo ""
+            if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
+              echo "All Postman API tests passed."
+            else
+              echo "API tests failed. Download the **newman-api-report** artifact for the HTML report."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail pipeline when API tests fail
-        if: always() && steps.newman.outputs.exit_code != '0'
+        if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "API tests failed with Newman exit code: ${{ steps.newman.outputs.exit_code }}"
+          echo "API tests failed. See the Newman CLI output above or the uploaded artifact."
           exit 1
-
-      - name: Confirm successful tests
-        if: steps.newman.outputs.exit_code == '0'
-        run: |
-          echo "All Postman API tests passed successfully."
