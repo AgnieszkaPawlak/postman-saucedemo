@@ -3,6 +3,7 @@ node_modules/
 
 # Newman reports
 newman/reports/*.html
+newman/reports/*.xml
 
 # OS files
 .DS_Store
