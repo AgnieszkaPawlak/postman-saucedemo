@@ -2,11 +2,11 @@
 
 [![API Tests](https://github.com/jptrp/saucedemo-api-testing-postman/actions/workflows/api-tests.yml/badge.svg)](https://github.com/jptrp/saucedemo-api-testing-postman/actions/workflows/api-tests.yml)
 [![Postman Collection](https://img.shields.io/badge/Postman-Collection-orange?logo=postman)](postman/SauceDemo_API_Collection.json)
-[![Newman](https://img.shields.io/badge/Newman-CLI-blue?logo=npm)](https://www.npmjs.com/package/newman)
+[![Postman CLI](https://img.shields.io/badge/Postman-CLI-orange?logo=postman)](https://www.npmjs.com/package/postman-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 
-> A comprehensive API testing suite for SauceDemo e-commerce application using Postman collections, Newman CLI runner, and GitHub Actions CI/CD automation.
+> A comprehensive API testing suite for SauceDemo e-commerce application using Postman collections, Postman CLI runner, and GitHub Actions CI/CD automation.
 
 ## 📋 Table of Contents
 
@@ -32,7 +32,7 @@
 
 ## 🎯 Overview
 
-This project demonstrates professional API testing practices using **Postman** for collection design and **Newman** for automated test execution. The test suite validates REST API endpoints for authentication, product inventory management, and shopping cart operations.
+This project demonstrates professional API testing practices using **Postman** for collection design and **Postman CLI** for automated test execution. The test suite validates REST API endpoints for authentication, product inventory management, and shopping cart operations.
 
 The project is designed as a **portfolio-ready** showcase of API testing expertise, featuring:
 
@@ -61,11 +61,11 @@ The project is designed as a **portfolio-ready** showcase of API testing experti
 
 View a comprehensive HTML report generated after each test run:
 
-<img src="assets/report-preview.png" alt="Newman HTML Test Report" width="800">
+<img src="assets/report-preview.png" alt="Postman CLI HTML Test Report" width="800">
 
 *The HTML report includes detailed request/response data, assertion results, response times, and visual statistics. See [Test Reports](#-test-reports) section for more details.*
 
-> **Note**: To generate your own report, run `./newman/run-api-tests.sh` and open `newman/reports/api-test-report.html`
+> **Note**: To generate your own report, run `npm run test:api` and open `newman/reports/api-test-report.html`
 
 ---
 
@@ -81,7 +81,7 @@ View a comprehensive HTML report generated after each test run:
 - ✅ **Status Code Verification**: Validate correct HTTP responses
 
 ### Automation Features
-- 🔄 **Newman CLI**: Automated test execution from command line
+- 🔄 **Postman CLI**: Official command-line test runner with built-in HTML and JUnit reports
 - 🚀 **GitHub Actions**: CI/CD pipeline with automatic test runs
 - 📊 **HTML Reports**: Detailed test results with request/response data
 - 🔗 **Environment Variables**: Dynamic token storage and request chaining
@@ -196,8 +196,8 @@ saucedemo-api-testing-postman/
 │
 ├── newman/
 │   ├── reports/                       # Generated HTML test reports (gitignored)
-│   ├── run-api-tests.sh               # Newman test runner script
-│   └── README.md                      # Newman runner documentation
+│   ├── run-api-tests.sh               # Postman CLI test runner script
+│   └── README.md                      # CLI runner documentation
 │
 ├── postman/
 │   ├── SauceDemo_API_Collection.json  # Postman collection with all tests
@@ -227,7 +227,7 @@ Before running the tests, ensure you have the following installed:
 
 - **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
 - **npm** (comes with Node.js)
-- **Newman** (installed via npm)
+- **Postman CLI** (installed via npm)
 - **Git** (for cloning the repository)
 
 **Optional:**
@@ -242,45 +242,51 @@ git clone https://github.com/jptrp/saucedemo-api-testing-postman.git
 cd saucedemo-api-testing-postman
 ```
 
-### 2. Install Newman
+### 2. Install dependencies
 
 ```bash
-npm install -g newman newman-reporter-html
+npm install
 ```
 
 ### 3. Verify Installation
 
 ```bash
-newman --version
+postman --version
 ```
 
 ## 🚀 Running Tests
 
 ### Local Execution
 
-#### Option 1: Using Newman Directly
+#### Option 1: Using npm script (Recommended)
 
 ```bash
-newman run postman/SauceDemo_API_Collection.json \
-  -e postman/SauceDemo_Environment.json \
-  --reporters cli,html \
-  --reporter-html-export newman/reports/api-test-report.html
+npm run test:api
 ```
 
-#### Option 2: Using the Runner Script
+#### Option 2: Using Postman CLI directly
 
 ```bash
-# Make script executable (first time only)
-chmod +x newman/run-api-tests.sh
+postman collection run postman/SauceDemo_API_Collection.json \
+  -e postman/SauceDemo_Environment.json \
+  --reporters cli,html,junit \
+  --reporter-html-export newman/reports/api-test-report.html \
+  --reporter-junit-export newman/reports/junit-report.xml \
+  --color on \
+  --bail
+```
 
-# Run tests
+#### Option 3: Using the runner script
+
+```bash
+chmod +x newman/run-api-tests.sh
 ./newman/run-api-tests.sh
 ```
 
 The script will:
 - Execute all test cases in the collection
 - Display results in the terminal (CLI reporter)
-- Generate an HTML report in `newman/reports/api-test-report.html`
+- Generate HTML and JUnit reports in `newman/reports/`
 - Exit with proper status codes for CI/CD integration
 
 ### CI/CD Pipeline
@@ -291,10 +297,10 @@ The project includes a GitHub Actions workflow that automatically runs tests on:
 - Manual workflow dispatch
 
 **Workflow features:**
-- Node.js 20.x environment
-- Automated Newman installation with caching
+- Node.js 20.x environment with npm caching
+- Postman CLI via project dependencies
 - Test execution with error handling
-- HTML report generation and artifact upload
+- HTML and JUnit report generation and artifact upload
 - Build status badges for README
 
 View the workflow: [`.github/workflows/api-tests.yml`](.github/workflows/api-tests.yml)
@@ -331,6 +337,10 @@ View the workflow: [`.github/workflows/api-tests.yml`](.github/workflows/api-tes
 
 ## 📈 Test Reports
 
+### JUnit Reports
+
+After running tests, a JUnit XML file is available at `newman/reports/junit-report.xml` for CI integrations.
+
 ### HTML Reports
 
 After running tests locally, open the HTML report:
@@ -351,8 +361,8 @@ The report includes:
 In GitHub Actions:
 1. Navigate to the **Actions** tab
 2. Select the latest workflow run
-3. Download the **newman-api-report** artifact
-4. Extract and open `api-test-report.html`
+3. Download the **postman-api-report** artifact
+4. Extract and open `api-test-report.html` or use `junit-report.xml` for CI tooling
 
 Reports are retained for **30 days**.
 
@@ -366,15 +376,14 @@ Comprehensive documentation is available in the `docs/` folder:
 
 Additional guides:
 - **[Postman Collection Guide](postman/README.md)** - How to use and modify the collection
-- **[Newman Runner Guide](newman/README.md)** - Newman execution details and options
+- **[CLI Runner Guide](newman/README.md)** - Postman CLI execution details and options
 
 ## 🛠️ Technologies
 
 | Technology | Purpose | Version |
 |------------|---------|---------|
 | [Postman](https://www.postman.com/) | API collection design and manual testing | Latest |
-| [Newman](https://www.npmjs.com/package/newman) | CLI test runner for automation | Latest |
-| [newman-reporter-html](https://www.npmjs.com/package/newman-reporter-html) | HTML report generation | Latest |
+| [Postman CLI](https://www.npmjs.com/package/postman-cli) | Official CLI test runner | Latest |
 | [Node.js](https://nodejs.org/) | Runtime environment | 20.x |
 | [GitHub Actions](https://github.com/features/actions) | CI/CD automation | v4 |
 | [DummyJSON API](https://dummyjson.com/) | Mock REST API backend | N/A |
@@ -387,14 +396,14 @@ Additional guides:
 
 #### Tests Failing Locally
 
-**Problem**: Newman tests fail when running locally  
+**Problem**: Postman CLI tests fail when running locally  
 **Solution**:
 ```bash
-# Verify Newman is installed
-newman --version
+# Verify Postman CLI is installed
+postman --version
 
 # Reinstall if needed
-npm install -g newman newman-reporter-html
+npm install
 
 # Check collection and environment paths
 ls -la postman/
@@ -432,8 +441,8 @@ chmod +x newman/run-api-tests.sh
 # Ensure reports directory exists
 mkdir -p newman/reports
 
-# Check newman-reporter-html is installed
-npm list -g newman-reporter-html
+# Run with explicit reporters
+npm run test:api
 ```
 
 #### CI Pipeline Failures
@@ -460,7 +469,7 @@ npm list -g newman-reporter-html
 **Suggested GitHub Topics** for better discoverability:
 
 ```
-api-testing          postman              newman
+api-testing          postman              postman-cli
 api-automation       rest-api             testing
 qa-automation        continuous-integration   github-actions
 test-automation      javascript           ci-cd
@@ -521,7 +530,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Postman](https://www.postman.com/) for the excellent API testing platform
 - [DummyJSON](https://dummyjson.com/) for providing the mock API
-- [Newman](https://github.com/postmanlabs/newman) team for the CLI runner
+- [Postman CLI](https://learning.postman.com/docs/postman-cli/postman-cli-overview/) team for the official CLI runner
 
 ---
 
@@ -536,6 +545,3 @@ If you have questions or need help:
 ---
 
 **⭐ If you find this project useful, please give it a star!**
-#   p o s t m a n - s a u c e d e m o  
- #   p o s t m a n - s a u c e d e m o  
- 

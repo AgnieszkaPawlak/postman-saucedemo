@@ -16,7 +16,7 @@ This directory contains visual assets for the project documentation.
 ### 2. Optional Additional Assets
 - `postman-collection-view.png` - Screenshot of Postman collection structure
 - `ci-pipeline-success.png` - GitHub Actions workflow success view
-- `test-execution-cli.png` - Terminal output of Newman test run
+- `test-execution-cli.png` - Terminal output of Postman CLI test run
 
 ## Image Guidelines
 

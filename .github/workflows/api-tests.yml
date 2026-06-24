@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   run-api-tests:
-    name: Run Newman API Tests
+    name: Run Postman CLI API Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,15 +19,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Install Newman and reporters
-        run: npm install -g newman newman-reporter-html newman-reporter-allure allure-commandline
+      - name: Install dependencies
+        run: npm ci
 
       - name: Make Script Executable
         run: chmod +x newman/run-api-tests.sh
@@ -41,18 +36,17 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: newman-api-report
+          name: postman-api-report
           path: |
             newman/reports/api-test-report.html
-            newman/reports/allure-results/
-            newman/reports/allure-report/
+            newman/reports/junit-report.xml
           if-no-files-found: warn
           retention-days: 30
 
       - name: Check Test Results
         if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "API tests failed. Check the Allure report artifact for details."
+          echo "API tests failed. Check the HTML or JUnit report artifact for details."
           exit 1
 
       - name: Success Summary

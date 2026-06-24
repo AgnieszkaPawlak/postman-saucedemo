@@ -1,7 +1,7 @@
 # API Test Strategy
 
 ## Overview
-This document outlines the strategic approach for API testing of the SauceDemo application using Postman, Newman, and automated CI/CD pipelines.
+This document outlines the strategic approach for API testing of the SauceDemo application using Postman, Postman CLI, and automated CI/CD pipelines.
 
 ## Objectives
 1. **Validate API Correctness**: Ensure all endpoints return expected responses with proper status codes, headers, and payload structures
@@ -71,8 +71,7 @@ This document outlines the strategic approach for API testing of the SauceDemo a
 | Tool | Purpose | Version |
 |------|---------|---------|
 | Postman | Collection design and manual testing | Latest |
-| Newman | CLI test runner for automation | Latest |
-| Newman HTML Reporter | Test result visualization | Latest |
+| Postman CLI | Official CLI test runner for automation | Latest |
 | GitHub Actions | CI/CD automation | v4 |
 | DummyJSON API | Mock API backend | N/A |
 
@@ -87,11 +86,11 @@ This document outlines the strategic approach for API testing of the SauceDemo a
 ### Local Testing
 ```bash
 # Run full collection
-newman run postman/SauceDemo_API_Collection.json \
+postman collection run postman/SauceDemo_API_Collection.json \
   -e postman/SauceDemo_Environment.json
 
 # Run with script
-./newman/run-api-tests.sh
+npm run test:api
 ```
 
 ### CI/CD Automation
@@ -122,7 +121,7 @@ newman run postman/SauceDemo_API_Collection.json \
 - Expand test coverage for new endpoints
 - Refactor tests for improved maintainability
 - Monitor test execution times and optimize slow tests
-- Keep dependencies (Newman, reporters) up to date
+- Keep dependencies (Postman CLI) up to date
 
 ## Reporting
 - CLI output for immediate feedback

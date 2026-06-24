@@ -1,3 +1,6 @@
+
+# Superseded: this project now uses Postman CLI with built-in HTML and JUnit reporters instead of Newman/Allure.
+
 # Migration Plan: JUnit → Allure Reports
 
 This document describes how to replace the current JUnit reporting setup with Allure Report in the SauceDemo API Testing project.

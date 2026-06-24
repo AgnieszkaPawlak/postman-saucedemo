@@ -10,15 +10,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   api-tests:
-    name: Run Newman API Tests
+    name: Run Postman CLI API Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -30,15 +26,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Install Newman and reporters
-        run: npm install -g newman newman-reporter-html newman-reporter-allure allure-commandline
+      - name: Install dependencies
+        run: npm ci
 
       - name: Verify Postman files exist
         run: |
@@ -55,54 +46,28 @@ jobs:
           done
           exit $missing
 
+      - name: Make script executable
+        run: chmod +x newman/run-api-tests.sh
+
       - name: Run Postman API tests
         id: run-tests
-        run: |
-          mkdir -p newman/reports/allure-results
-          newman run postman/SauceDemo_API_Collection.json \
-            --environment postman/SauceDemo_Environment.json \
-            --reporters cli,html,allure \
-            --reporter-html-export newman/reports/api-test-report.html \
-            --reporter-allure-resultsDir newman/reports/allure-results \
-            --color on
+        run: ./newman/run-api-tests.sh
         continue-on-error: true
 
-      - name: Load Allure history
-        if: always()
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build Allure report
-        if: always()
-        uses: simple-elf/allure-report-action@v1.13
-        id: allure-report
-        with:
-          allure_results: newman/reports/allure-results
-          gh_pages: gh-pages
-          allure_history: allure-history
-
-      - name: Upload Newman reports
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: newman-api-report
+          name: postman-api-report
           path: |
             newman/reports/api-test-report.html
-            newman/reports/allure-results/
-            allure-history/
+            newman/reports/junit-report.xml
           if-no-files-found: warn
           retention-days: 30
 
       - name: Add test summary
         if: always()
         run: |
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          REPORT_URL="https://${OWNER}.github.io/${REPO}/"
-
           {
             echo "## Postman API test results"
             echo ""
@@ -112,48 +77,11 @@ jobs:
               echo "API tests failed."
             fi
             echo ""
-            echo "### Allure Report"
-            echo ""
-            echo "[Open Allure Report](${REPORT_URL})"
-            echo ""
-            echo "On \`main\`, the deploy job publishes this report to GitHub Pages. After it completes, use the **github-pages** link in the workflow run header."
+            echo "Download the **postman-api-report** artifact for HTML and JUnit reports."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail pipeline when API tests fail
         if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "API tests failed. See the Newman CLI output or the Allure report."
+          echo "API tests failed. See the Postman CLI output or downloaded reports."
           exit 1
-
-  deploy-allure:
-    name: Deploy Allure Report
-    needs: api-tests
-    if: always() && needs.api-tests.result != 'cancelled' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.set-url.outputs.page_url }}
-
-    steps:
-      - name: Set GitHub Pages URL
-        id: set-url
-        run: |
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "page_url=https://${OWNER}.github.io/${REPO}/" >> "$GITHUB_OUTPUT"
-
-      - name: Download Allure report
-        uses: actions/download-artifact@v4
-        with:
-          name: newman-api-report
-          path: report
-
-      - name: Deploy Allure report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: report/allure-history

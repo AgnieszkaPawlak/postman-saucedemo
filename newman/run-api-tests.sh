@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #########################################
-# Newman API Test Runner Script
-# Purpose: Execute Postman collection tests via Newman CLI
-# Outputs: CLI results + HTML + Allure reports
+# Postman CLI API Test Runner Script
+# Purpose: Execute Postman collection tests via Postman CLI
+# Outputs: CLI results + HTML + JUnit reports
 #########################################
 
 set -e
@@ -15,61 +15,49 @@ COLLECTION_PATH="$PROJECT_ROOT/postman/SauceDemo_API_Collection.json"
 ENVIRONMENT_PATH="$PROJECT_ROOT/postman/SauceDemo_Environment.json"
 REPORT_DIR="$SCRIPT_DIR/reports"
 HTML_REPORT_PATH="$REPORT_DIR/api-test-report.html"
-ALLURE_RESULTS_DIR="$REPORT_DIR/allure-results"
-ALLURE_REPORT_DIR="$REPORT_DIR/allure-report"
+JUNIT_REPORT_PATH="$REPORT_DIR/junit-report.xml"
 
-mkdir -p "$REPORT_DIR" "$ALLURE_RESULTS_DIR"
+mkdir -p "$REPORT_DIR"
 
-if [ -x "$PROJECT_ROOT/node_modules/.bin/newman" ]; then
-  NEWMAN="$PROJECT_ROOT/node_modules/.bin/newman"
-  ALLURE="$PROJECT_ROOT/node_modules/.bin/allure"
+if [ -x "$PROJECT_ROOT/node_modules/.bin/postman" ]; then
+  POSTMAN="$PROJECT_ROOT/node_modules/.bin/postman"
 else
-  NEWMAN="newman"
-  ALLURE="allure"
+  POSTMAN="postman"
 fi
 
 echo "========================================"
-echo "Newman API Test Execution"
+echo "Postman CLI API Test Execution"
 echo "========================================"
 echo "Collection: $COLLECTION_PATH"
 echo "Environment: $ENVIRONMENT_PATH"
 echo "HTML report: $HTML_REPORT_PATH"
-echo "Allure results: $ALLURE_RESULTS_DIR"
-echo "Allure report: $ALLURE_REPORT_DIR"
+echo "JUnit report: $JUNIT_REPORT_PATH"
 echo "========================================"
 echo ""
 
 echo "Running API tests..."
 set +e
-"$NEWMAN" run "$COLLECTION_PATH" \
+"$POSTMAN" collection run "$COLLECTION_PATH" \
   -e "$ENVIRONMENT_PATH" \
-  --reporters cli,html,allure \
+  --reporters cli,html,junit \
   --reporter-html-export "$HTML_REPORT_PATH" \
-  --reporter-allure-resultsDir "$ALLURE_RESULTS_DIR" \
+  --reporter-junit-export "$JUNIT_REPORT_PATH" \
+  --reporter-html-omitAllHeadersAndBody \
   --color on \
   --bail
-NEWMAN_EXIT=$?
+POSTMAN_EXIT=$?
 set -e
 
-if [ -d "$ALLURE_RESULTS_DIR" ] && [ "$(ls -A "$ALLURE_RESULTS_DIR" 2>/dev/null)" ]; then
-  echo ""
-  echo "Generating Allure report..."
-  "$ALLURE" generate "$ALLURE_RESULTS_DIR" -o "$ALLURE_REPORT_DIR" --clean
-else
-  echo ""
-  echo "No Allure results found; skipping report generation."
-fi
-
-if [ "$NEWMAN_EXIT" -eq 0 ]; then
+if [ "$POSTMAN_EXIT" -eq 0 ]; then
   echo ""
   echo "All tests passed!"
   echo "HTML Report: $HTML_REPORT_PATH"
-  echo "Allure Report: $ALLURE_REPORT_DIR/index.html"
+  echo "JUnit Report: $JUNIT_REPORT_PATH"
   exit 0
 else
   echo ""
-  echo "Tests failed with exit code: $NEWMAN_EXIT"
+  echo "Tests failed with exit code: $POSTMAN_EXIT"
   echo "HTML Report: $HTML_REPORT_PATH"
-  echo "Allure Report: $ALLURE_REPORT_DIR/index.html"
-  exit "$NEWMAN_EXIT"
+  echo "JUnit Report: $JUNIT_REPORT_PATH"
+  exit "$POSTMAN_EXIT"
 fi

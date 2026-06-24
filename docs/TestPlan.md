@@ -15,7 +15,7 @@
 This test plan outlines the approach, resources, and schedule for testing the SauceDemo API. It defines the scope of testing, test methodologies, test deliverables, and success criteria.
 
 ### 1.2 Project Overview
-The SauceDemo API Testing project validates the REST API endpoints for an e-commerce application, covering authentication, product inventory management, and shopping cart operations using Postman collections and automated Newman execution.
+The SauceDemo API Testing project validates the REST API endpoints for an e-commerce application, covering authentication, product inventory management, and shopping cart operations using Postman collections and automated Postman CLI execution.
 
 ### 1.3 Audience
 - QA Engineers
@@ -86,9 +86,9 @@ Ensure API responses conform to expected schemas and data types, maintaining bac
 | Method | Tool | Frequency |
 |--------|------|-----------|
 | Manual Testing | Postman UI | During development |
-| Automated Testing | Newman CLI | On-demand locally |
+| Automated Testing | Postman CLI | On-demand locally |
 | CI/CD Testing | GitHub Actions | Every commit/PR |
-| Regression Testing | Newman CLI | Before releases |
+| Regression Testing | Postman CLI | Before releases |
 
 ### 3.3 Test Data Management
 - Environment variables stored in `SauceDemo_Environment.json`
@@ -108,8 +108,7 @@ Ensure API responses conform to expected schemas and data types, maintaining bac
 | Tool | Version | Purpose |
 |------|---------|---------|
 | Postman | Latest | Collection design & manual testing |
-| Newman | Latest | CLI automation |
-| newman-reporter-html | Latest | HTML report generation |
+| Postman CLI | Latest | CLI automation |
 | Node.js | 20.x | Runtime environment |
 | GitHub Actions | v4 | CI/CD automation |
 
@@ -118,7 +117,7 @@ Ensure API responses conform to expected schemas and data types, maintaining bac
 ### 5.1 Test Artifacts
 - ✅ Postman Collection (`SauceDemo_API_Collection.json`)
 - ✅ Environment Configuration (`SauceDemo_Environment.json`)
-- ✅ Newman Runner Script (`run-api-tests.sh`)
+- ✅ Postman CLI Runner Script (`run-api-tests.sh`)
 - ✅ CI/CD Pipeline Configuration (`.github/workflows/api-tests.yml`)
 - ✅ Test Documentation (this document)
 - ✅ HTML Test Reports (generated per execution)
@@ -147,7 +146,7 @@ Ensure API responses conform to expected schemas and data types, maintaining bac
 - ✅ Environment configuration is complete
 - ✅ Postman collection is created
 - ✅ Test data is prepared
-- ✅ Newman is installed locally and in CI
+- ✅ Postman CLI is installed locally and in CI
 
 ### 7.2 Exit Criteria
 - ✅ All test cases executed successfully (100% pass rate)
