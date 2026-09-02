@@ -1,4 +1,4 @@
-name: Trigger Playwright smoke on PRr
+name: Trigger Playwright smoke on PR
 
 on:
   push:
