@@ -28,6 +28,7 @@ jobs:
         with:
           repository: AgnieszkaPawlak/ecom-test-playwright
           ref: main
+          token: ${{ secrets.GH_PAT }}
 
       - name: Install Node
         uses: actions/setup-node@v6
