@@ -1,23 +1,53 @@
-name: Trigger Playwright smoke on push
+name: Playwright smoke
 
 on:
   push:
   workflow_dispatch:
 
+env:
+  BASE_URL: https://practicesoftwaretesting.com
+  CUSTOMER_1_EMAIL: ${{ secrets.CUSTOMER_1_EMAIL }}
+  CUSTOMER_1_PASSWORD: ${{ secrets.CUSTOMER_1_PASSWORD }}
+  CUSTOMER_NAME: ${{ secrets.CUSTOMER_NAME }}
+
 jobs:
-  trigger-smoke:
+  smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - name: Dispatch smoke tests to ecom-test-playwright
-        uses: peter-evans/repository-dispatch@v3
+      - name: Log trigger
+        run: |
+          echo "Source repo: ${{ github.repository }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "BASE_URL: $BASE_URL"
+
+      - name: Checkout Playwright tests
+        uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GH_PAT }}
           repository: AgnieszkaPawlak/ecom-test-playwright
-          event-type: postman-pr-smoke
-          client-payload: >-
-            {
-              "commit_sha": "${{ github.sha }}",
-              "source_repo": "${{ github.repository }}",
-              "source_ref": "${{ github.ref_name }}",
-              "base_url": "https://practicesoftwaretesting.com"
-            }
+          ref: main
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 7
