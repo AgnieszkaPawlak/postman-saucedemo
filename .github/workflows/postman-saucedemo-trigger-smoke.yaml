@@ -1,0 +1,25 @@
+name: Trigger Playwright smoke on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  trigger-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch smoke tests to ecom-test-playwright
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
+          repository: AgnieszkaPawlak/ecom-test-playwright
+          event-type: postman-pr-smoke
+          client-payload: >-
+            {
+              "pr_number": "${{ github.event.pull_request.number || 'manual' }}",
+              "source_repo": "${{ github.repository }}",
+              "source_ref": "${{ github.head_ref || github.ref_name }}",
+              "base_url": "https://practicesoftwaretesting.com"
+            }
