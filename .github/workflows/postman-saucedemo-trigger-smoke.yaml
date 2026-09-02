@@ -1,8 +1,7 @@
-name: Trigger Playwright smoke on PR
+name: Trigger Playwright smoke on PRr
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
     branches: [main]
   workflow_dispatch:
 
