@@ -1,8 +1,7 @@
-name: Trigger Playwright smoke on PR
+name: Trigger Playwright smoke on push
 
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -17,8 +16,8 @@ jobs:
           event-type: postman-pr-smoke
           client-payload: >-
             {
-              "pr_number": "${{ github.event.pull_request.number || 'manual' }}",
+              "commit_sha": "${{ github.sha }}",
               "source_repo": "${{ github.repository }}",
-              "source_ref": "${{ github.head_ref || github.ref_name }}",
+              "source_ref": "${{ github.ref_name }}",
               "base_url": "https://practicesoftwaretesting.com"
             }
